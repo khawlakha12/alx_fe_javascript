@@ -10,7 +10,7 @@ let quotes = [
   const addQuoteSection = document.getElementById("addQuoteSection");
   const categoryFilter = document.getElementById("categoryFilter");
   
-  // --- Fonction pour créer le menu déroulant des catégories ---
+
   function createCategoryDropdown() {
     const categories = [...new Set(quotes.map(q => q.category))];
     const select = document.createElement("select");
@@ -33,7 +33,7 @@ let quotes = [
     categoryFilter.appendChild(select);
   }
   
-  // --- Fonction pour afficher une citation aléatoire ---
+
   function showRandomQuote() {
     const selectedCategory = document.getElementById("categorySelect").value;
     let filteredQuotes = quotes;
@@ -52,7 +52,7 @@ let quotes = [
     quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
   }
   
-  // --- Fonction pour créer le formulaire d’ajout de citation ---
+  
   function createAddQuoteForm() {
     const form = document.createElement("div");
     form.innerHTML = `
@@ -64,12 +64,12 @@ let quotes = [
   
     addQuoteSection.appendChild(form);
   
-    // Attacher l’événement au bouton ajouté dynamiquement
+   
     const addQuoteBtn = form.querySelector("#addQuoteBtn");
     addQuoteBtn.addEventListener("click", addQuote);
   }
   
-  // --- Fonction pour ajouter une nouvelle citation ---
+ 
   function addQuote() {
     const newQuoteText = document.getElementById("newQuoteText");
     const newQuoteCategory = document.getElementById("newQuoteCategory");
@@ -91,10 +91,10 @@ let quotes = [
     alert("Quote added successfully!");
   }
   
-  // --- Écouteurs d’événements ---
+ 
   newQuoteBtn.addEventListener("click", showRandomQuote);
   
-  // --- Initialisation ---
+ 
   createCategoryDropdown();
   createAddQuoteForm();
   
