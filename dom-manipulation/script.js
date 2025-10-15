@@ -104,14 +104,12 @@ let quotes = [
   createAddQuoteForm();
   
   
-  // -------------------- NOUVELLE PARTIE : WEB STORAGE + JSON HANDLING --------------------
+  // -------------------- PARTIE 1 : WEB STORAGE + JSON HANDLING --------------------
   
-  // Sauvegarder les citations dans le localStorage
   function saveQuotes() {
     localStorage.setItem("quotes", JSON.stringify(quotes));
   }
   
-  // Charger les citations depuis le localStorage
   function loadQuotes() {
     const storedQuotes = localStorage.getItem("quotes");
     if (storedQuotes) {
@@ -119,7 +117,6 @@ let quotes = [
     }
   }
   
-  // Charger la dernière citation vue depuis la session
   function loadLastViewedQuote() {
     const lastQuote = sessionStorage.getItem("lastViewedQuote");
     if (lastQuote) {
@@ -128,7 +125,6 @@ let quotes = [
     }
   }
   
-  // Exporter les citations en JSON
   function exportToJsonFile() {
     const dataStr = JSON.stringify(quotes, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
@@ -142,7 +138,6 @@ let quotes = [
     URL.revokeObjectURL(url);
   }
   
-  // Importer des citations depuis un fichier JSON
   function importFromJsonFile(event) {
     const fileReader = new FileReader();
     fileReader.onload = function(e) {
@@ -163,8 +158,65 @@ let quotes = [
     fileReader.readAsText(event.target.files[0]);
   }
   
-  // Charger les données au démarrage
   loadQuotes();
   createCategoryDropdown();
   loadLastViewedQuote();
+  
+  
+  // -------------------- PARTIE 2 : DYNAMIC CONTENT FILTERING SYSTEM --------------------
+  
+  // Remplir dynamiquement le menu des catégories
+  function populateCategories() {
+    const categorySelect = document.getElementById("categoryFilter");
+  
+    // Nettoyer la liste avant de la recréer
+    categorySelect.innerHTML = `<option value="All">All Categories</option>`;
+  
+    // Récupérer les catégories uniques
+    const categories = [...new Set(quotes.map(q => q.category))];
+  
+    categories.forEach(cat => {
+      const option = document.createElement("option");
+      option.value = cat;
+      option.textContent = cat;
+      categorySelect.appendChild(option);
+    });
+  
+    // Restaurer le dernier filtre sélectionné
+    const lastFilter = localStorage.getItem("selectedCategory");
+    if (lastFilter) {
+      categorySelect.value = lastFilter;
+      filterQuotes();
+    }
+  }
+  
+  // Filtrer les citations selon la catégorie choisie
+  function filterQuotes() {
+    const selectedCategory = document.getElementById("categoryFilter").value;
+    localStorage.setItem("selectedCategory", selectedCategory); // Sauvegarde du filtre
+  
+    const filteredQuotes =
+      selectedCategory === "All"
+        ? quotes
+        : quotes.filter(q => q.category === selectedCategory);
+  
+    // Afficher toutes les citations correspondant à la catégorie
+    if (filteredQuotes.length === 0) {
+      quoteDisplay.textContent = "No quotes available for this category.";
+    } else {
+      const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+      const quote = filteredQuotes[randomIndex];
+      quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
+    }
+  }
+  
+  // Mettre à jour les catégories si on ajoute une nouvelle citation
+  const originalAddQuote = addQuote;
+  addQuote = function() {
+    originalAddQuote();
+    populateCategories();
+  };
+  
+  // Initialisation du système de filtrage
+  populateCategories();
   
