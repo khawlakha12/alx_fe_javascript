@@ -1,6 +1,4 @@
-// ========================
-// DYNAMIC QUOTE GENERATOR
-// ========================
+
 let quotes = [
   { text: "The best way to predict the future is to invent it.", category: "Motivation" },
   { text: "In the middle of difficulty lies opportunity.", category: "Inspiration" },
@@ -15,7 +13,6 @@ const newQuoteText = document.getElementById("newQuoteText");
 const newQuoteCategory = document.getElementById("newQuoteCategory");
 const categoryFilter = document.getElementById("categoryFilter");
 
-// ✅ Save and Load from Local Storage
 function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
@@ -27,7 +24,6 @@ function loadQuotes() {
   }
 }
 
-// ✅ Create Dropdown for Categories
 function createCategoryDropdown() {
   const categories = [...new Set(quotes.map(q => q.category))];
   const select = document.createElement("select");
@@ -47,7 +43,6 @@ function createCategoryDropdown() {
   categoryFilter.appendChild(select);
 }
 
-// ✅ Show Random Quote
 function showRandomQuote() {
   const selectedCategory = document.getElementById("categorySelect").value;
   let filteredQuotes = quotes;
@@ -62,11 +57,9 @@ function showRandomQuote() {
   const quote = filteredQuotes[randomIndex];
   quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
 
-  // Save last viewed quote (Session Storage Example)
   sessionStorage.setItem("lastQuote", JSON.stringify(quote));
 }
 
-// ✅ Add a new quote
 function addQuote() {
   const text = newQuoteText.value.trim();
   const category = newQuoteCategory.value.trim();
@@ -82,7 +75,7 @@ function addQuote() {
   alert("Quote added successfully!");
 }
 
-// ✅ Import from JSON
+
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
   fileReader.onload = function(event) {
@@ -95,7 +88,6 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// ✅ Export to JSON
 function exportToJsonFile() {
   const dataStr = JSON.stringify(quotes, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
@@ -107,7 +99,6 @@ function exportToJsonFile() {
   URL.revokeObjectURL(url);
 }
 
-// ✅ Filtering System
 function populateCategories() {
   const select = document.getElementById("categoryFilter");
   const categories = ["all", ...new Set(quotes.map(q => q.category))];
@@ -119,7 +110,6 @@ function populateCategories() {
     select.appendChild(option);
   });
 
-  // Restore last filter
   const lastFilter = localStorage.getItem("lastCategoryFilter");
   if (lastFilter) select.value = lastFilter;
 }
@@ -133,7 +123,6 @@ function filterQuotes() {
   quoteDisplay.textContent = display || "No quotes available for this category.";
 }
 
-// ✅ Initial setup
 loadQuotes();
 createCategoryDropdown();
 populateCategories();
@@ -141,11 +130,6 @@ populateCategories();
 newQuoteBtn.addEventListener("click", showRandomQuote);
 addQuoteBtn.addEventListener("click", addQuote);
 
-// =============================
-//  🔄 SERVER SYNC FUNCTIONALITY
-// =============================
-
-// UI Notification
 function notifyUser(message, type = "info") {
   const note = document.createElement("div");
   note.textContent = message;
@@ -161,20 +145,17 @@ function notifyUser(message, type = "info") {
   setTimeout(() => note.remove(), 4000);
 }
 
-// Simulated Server Sync
 async function syncQuotes() {
   try {
-    // Simulate server fetch
+    
     const response = await fetch("https://jsonplaceholder.typicode.com/posts");
     const serverData = await response.json();
 
-    // Simulate converting server posts into quotes
     const serverQuotes = serverData.slice(0, 5).map(post => ({
       text: post.title,
       category: "Server"
     }));
 
-    // Compare local vs server data (simple conflict resolution)
     const localTexts = quotes.map(q => q.text);
     const newServerQuotes = serverQuotes.filter(sq => !localTexts.includes(sq.text));
 
@@ -193,9 +174,7 @@ async function syncQuotes() {
   }
 }
 
-// Periodic Sync every 30 seconds
 setInterval(syncQuotes, 30000);
 
-// Manual Sync Button (optional)
 const syncBtn = document.getElementById("syncBtn");
 if (syncBtn) syncBtn.addEventListener("click", syncQuotes);
