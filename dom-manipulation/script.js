@@ -92,7 +92,7 @@ let quotes = [
     newQuoteCategory.value = "";
   
     createCategoryDropdown();
-    saveQuotes(); // <-- Sauvegarde après ajout
+    saveQuotes();
     alert("Quote added successfully!");
   }
   
@@ -165,16 +165,10 @@ let quotes = [
   
   // -------------------- PARTIE 2 : DYNAMIC CONTENT FILTERING SYSTEM --------------------
   
-  // Remplir dynamiquement le menu des catégories
   function populateCategories() {
     const categorySelect = document.getElementById("categoryFilter");
-  
-    // Nettoyer la liste avant de la recréer
     categorySelect.innerHTML = `<option value="All">All Categories</option>`;
-  
-    // Récupérer les catégories uniques
     const categories = [...new Set(quotes.map(q => q.category))];
-  
     categories.forEach(cat => {
       const option = document.createElement("option");
       option.value = cat;
@@ -182,7 +176,6 @@ let quotes = [
       categorySelect.appendChild(option);
     });
   
-    // Restaurer le dernier filtre sélectionné
     const lastFilter = localStorage.getItem("selectedCategory");
     if (lastFilter) {
       categorySelect.value = lastFilter;
@@ -190,17 +183,15 @@ let quotes = [
     }
   }
   
-  // Filtrer les citations selon la catégorie choisie
   function filterQuotes() {
     const selectedCategory = document.getElementById("categoryFilter").value;
-    localStorage.setItem("selectedCategory", selectedCategory); // Sauvegarde du filtre
+    localStorage.setItem("selectedCategory", selectedCategory);
   
     const filteredQuotes =
       selectedCategory === "All"
         ? quotes
         : quotes.filter(q => q.category === selectedCategory);
   
-    // Afficher toutes les citations correspondant à la catégorie
     if (filteredQuotes.length === 0) {
       quoteDisplay.textContent = "No quotes available for this category.";
     } else {
@@ -210,13 +201,107 @@ let quotes = [
     }
   }
   
-  // Mettre à jour les catégories si on ajoute une nouvelle citation
   const originalAddQuote = addQuote;
   addQuote = function() {
     originalAddQuote();
     populateCategories();
   };
   
-  // Initialisation du système de filtrage
   populateCategories();
+  
+  
+  // -------------------- PARTIE 3 : SERVER SYNC & CONFLICT RESOLUTION --------------------
+  
+  // Simuler l'URL d'une API (exemple : JSONPlaceholder)
+  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+  
+  // Fonction pour simuler la récupération des citations depuis le serveur
+  async function fetchQuotesFromServer() {
+    try {
+      // Simulation d'une requête GET (on récupère des données fictives)
+      const response = await fetch(SERVER_URL);
+      const data = await response.json();
+  
+      // Convertir les données simulées en format "quote"
+      const serverQuotes = data.slice(0, 5).map(item => ({
+        text: item.title,
+        category: "Server"
+      }));
+  
+      resolveConflicts(serverQuotes);
+    } catch (error) {
+      console.error("Error fetching server data:", error);
+    }
+  }
+  
+  // Résolution des conflits : le serveur a la priorité
+  function resolveConflicts(serverQuotes) {
+    const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+  
+    // Si un texte du serveur n'existe pas localement, on l'ajoute
+    serverQuotes.forEach(sq => {
+      const exists = localQuotes.some(lq => lq.text === sq.text);
+      if (!exists) {
+        localQuotes.push(sq);
+      }
+    });
+  
+    // Si une citation locale est différente (même texte, autre catégorie), on garde celle du serveur
+    localQuotes.forEach((lq, index) => {
+      const serverMatch = serverQuotes.find(sq => sq.text === lq.text);
+      if (serverMatch && lq.category !== serverMatch.category) {
+        localQuotes[index] = serverMatch;
+      }
+    });
+  
+    quotes = localQuotes;
+    saveQuotes();
+    createCategoryDropdown();
+    populateCategories();
+    showSyncNotification("Quotes synced with server (server data prioritized).");
+  }
+  
+  // Notification visuelle lors de la synchronisation
+  function showSyncNotification(message) {
+    let notif = document.getElementById("syncNotification");
+    if (!notif) {
+      notif = document.createElement("div");
+      notif.id = "syncNotification";
+      notif.style.position = "fixed";
+      notif.style.bottom = "10px";
+      notif.style.right = "10px";
+      notif.style.background = "#4CAF50";
+      notif.style.color = "white";
+      notif.style.padding = "10px 15px";
+      notif.style.borderRadius = "8px";
+      notif.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+      document.body.appendChild(notif);
+    }
+    notif.textContent = message;
+    setTimeout(() => (notif.style.display = "none"), 4000);
+  }
+  
+  // Simulation d’envoi de nouvelles citations vers le serveur
+  async function syncNewQuotesToServer() {
+    const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+    try {
+      await fetch(SERVER_URL, {
+        method: "POST",
+        body: JSON.stringify(localQuotes),
+        headers: { "Content-Type": "application/json" }
+      });
+      showSyncNotification("Local quotes synced to server successfully!");
+    } catch (error) {
+      console.error("Error syncing to server:", error);
+    }
+  }
+  
+  // Synchronisation périodique toutes les 30 secondes
+  setInterval(() => {
+    fetchQuotesFromServer();
+    syncNewQuotesToServer();
+  }, 30000);
+  
+  // Synchronisation manuelle au démarrage
+  fetchQuotesFromServer();
   
